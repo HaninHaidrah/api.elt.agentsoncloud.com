@@ -1,20 +1,21 @@
 const express = require("express");
-const templateRoute = express.Router();
+const historyRoute = express.Router();
 
 /* -------------------------------------------------------------------------------------------------------------- */
 
 const {
-  createEdTemplate,
-  getEdTemplates,
-  updateEdTemplate,deleteEdTemplate
-} = require("../../routers/controllers/edt");
+  createHistoryFile,
+  getHistoryFiles,
+  updateFileHistory,
+  deleteFileHistory,
+} = require("../../routers/controllers/history");
 
 ///////////////////////////////////////////////// created by user  //////////////////////////////////////////////////////
 
-templateRoute.post("/addEtlTemplate", createEdTemplate);
-templateRoute.post("/getEtlTemplates", getEdTemplates);
-templateRoute.post("/updateEtlTemplate", updateEdTemplate);
-templateRoute.post("/deleteEtlTemplate", deleteEdTemplate);
+historyRoute.post("/addHistoryFile", createHistoryFile);
+historyRoute.post("/getHistoryFiles", getHistoryFiles);
+historyRoute.post("/updateHistoryFile", updateFileHistory);
+historyRoute.post("/deleteHistoryFile", deleteFileHistory);
 // templateRoute.post("/createNotificationByEvent", createNotificationByEvent);
 // templateRoute.post(
 //   "/createNotificationFromTemplate",
@@ -24,4 +25,4 @@ templateRoute.post("/deleteEtlTemplate", deleteEdTemplate);
 ////////////////////////////////////////////////  reassign    ////////////////////////////////////////////////////////
 
 /// exports
-module.exports = templateRoute;
+module.exports = historyRoute;

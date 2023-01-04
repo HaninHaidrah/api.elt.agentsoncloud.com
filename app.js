@@ -20,10 +20,12 @@ sequelize
 ///////////////////////////
 
 const edTemplate = require("./routers/rotues/Template");
+const fileHistory = require("./routers/rotues/history");
 
 ///////////////////////////
 
-app.use("/edt", edTemplate);
+app.use("/etl/template", edTemplate);
+app.use("/etl/history", fileHistory);
 
 ////////////////////////////
 

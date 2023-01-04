@@ -13,6 +13,8 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
+    "start":"npm run app.js",
+    "start:dev":"env PORT=30354 DB_USERNAME=dev DB_PASSWORD=Dev@r00t DB_HOST_ADDRESS=192.81.217.171  DB_PORT=50062 API_GATEWAY_URL=https://api.development.agentsoncloud.com nodemon",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

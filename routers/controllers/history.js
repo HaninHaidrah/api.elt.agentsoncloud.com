@@ -7,76 +7,74 @@ const {
   wherINJSON,
   whereINDataType,
   arrayOfIds,
-} = require("../../routers/services/shared/jsonBuilders");
+} = require("../services/shared/jsonBuilders");
 const {
-  createTemplateRecord,
-  updateEdTemplateRecord,
-} = require("../services/template");
+  createHistoryRecord,
+  updateHistoryFileRecord,
+} = require("../services/history");
 
-const createEdTemplate = async (req, res) => {
+const createHistoryFile = async (req, res) => {
   try {
     // in this function we take the body details  for  create new Template record
-    let { name, description, body, transactionId, country, createdBy ,status} =
-      req.body;
+    let { name, path, template, transactionId, country, createdBy } = req.body;
     let defaultCountry = "JOD";
     if (!country) country = defaultCountry;
-    const id = `ETL-EDT-${country}-${uuid.v4()}`;
-    if (!transactionId) transactionId = `TRN-ETL-EDT-${country}-${uuid.v4()}`;
+    const id = `ETL-EGH-${country}-${uuid.v4()}`;
+    if (!transactionId) transactionId = `TRN-ETL-EGH-${country}-${uuid.v4()}`;
     const templateDTO = {
       id,
-      body,
       name,
-      description,
+      path,
+      template,
       transactionId,
-      createdBy,status
+      country,
+      createdBy,
     };
 
-    const newRecord = await createTemplateRecord(templateDTO);
+    const newRecord = await createHistoryRecord(templateDTO);
     res.status(201).json(newRecord);
   } catch (error) {
     res.status(401).json({ message: error.message });
   }
 };
 
-const getEdTemplates = async (req, res) => {
+const getHistoryFiles = async (req, res) => {
   try {
     let {
       ids,
-      status,
       body,
       name,
       language,
-      description,
+      templateId,
       orderCondition,
       limit,
       offset,
+      path,
     } = req.body;
     let response = [];
 
     if (limit && offset) {
       limit = limit * 1;
       offset = offset * 1 - 1;
-      const record = await sequelize.models.EDT.findAndCountAll({
+      const record = await sequelize.models.EGH.findAndCountAll({
         limit,
         offset,
         where: {
           [Op.and]: [
             ids ? arrayOfIds("id", ids) : "",
-            status !== undefined ? whereINDataType("status", "eq", status) : "",
             name ? wherINJSON("name", "like", `${language}`, name) : "",
-            description
-              ? wherINJSON(
-                  "description",
-                  "like",
-                  `description[${language}]`,
-                  description
-                )
-              : "",
             body?.length
               ? body.map((el) => {
-                return     wherINJSON("body", "like", `${el.key}`, el.value);
+                  return wherINJSON(
+                    "template",
+                    "like",
+                    `body.${el.key}`,
+                    el.value
+                  );
                 })
               : "",
+            templateId ? wherINJSON("template", "eq", `id`, templateId) : "",
+            path ? whereINDataType("path", "like", path) : "",
           ],
           recordStatus: "LATEST",
         },
@@ -90,25 +88,24 @@ const getEdTemplates = async (req, res) => {
         ...record,
       });
     } else {
-      response = await sequelize.models.EDT.findAndCountAll({
+      response = await sequelize.models.EGH.findAndCountAll({
         where: {
           [Op.and]: [
             ids ? arrayOfIds("id", ids) : "",
-            status !== undefined ? whereINDataType("status", "eq", status) : "",
             name ? wherINJSON("name", "like", `${language}`, name) : "",
-            description
-              ? wherINJSON(
-                  "description",
-                  "like",
-                  `description[${language}]`,
-                  description
-                )
-              : "",
             body?.length
               ? body.map((el) => {
-                  return wherINJSON("body", "like", `${el.key}`, el.value);
+                  return wherINJSON(
+                    "template",
+                    "eq",
+                    `body.${el.key}`,
+                    el.value
+                  );
                 })
               : "",
+            templateId ? wherINJSON("template", "eq", `id`, templateId) : "",
+
+            path ? whereINDataType("path", "like", path) : "",
           ],
           recordStatus: "LATEST",
         },
@@ -124,51 +121,45 @@ const getEdTemplates = async (req, res) => {
   }
 };
 
-const updateEdTemplate = async (req, res) => {
+const updateFileHistory = async (req, res) => {
   try {
-    let {
-      id,
-      name,
-      description,
-      body,
-      status,
-      createdBy,
-      createdAt,
-      transactionId,
-    } = req.body;
+    let { id, name, template, path, createdBy, createdAt, transactionId } =
+      req.body;
     // we need to get the notifcation we need to update it
-    const oldRecord = await sequelize.models.EDT.findOne({
+    const oldRecord = await sequelize.models.EGH.findOne({
       where: {
         id,
         recordStatus: "LATEST",
       },
     });
     // now i will update the recordStatus for the record to UPDATED
-    const updateRecored = await updateEdTemplateRecord(oldRecord.id, "UPDATED");
+    const updateRecored = await updateHistoryFileRecord(
+      oldRecord.id,
+      "UPDATED"
+    );
     let DTO = {
       name: name ? name : oldRecord.name,
-      description: description ? description : oldRecord.description,
-      body: body ? body : oldRecord.body,
-      status: status ? status : oldRecord.status,
+      template: template ? template : oldRecord.template,
+      path: path ? path : oldRecord.path,
       createdBy: createdBy ? createdBy : oldRecord.createdBy,
       createdAt: createdAt ? createdAt : oldRecord.createdAt,
       transactionId: transactionId ? transactionId : oldRecord.transactionId,
       id: id ? id : oldRecord.id,
     };
-    const newRecord = await createTemplateRecord(DTO);
+    const newRecord = await createHistoryRecord(DTO);
     res.status(200).json(newRecord);
   } catch (error) {
     res.status(402).send({ error: error.message });
   }
 };
 
-const deleteEdTemplate = async (req, res) => {
+const deleteFileHistory = async (req, res) => {
   try {
     const { id } = req.body;
 
-    await updateEdTemplateRecord(id, "DELETED");
+    await updateHistoryFileRecord(id, "DELETED");
 
-    const record = await sequelize.models.EDT.findOne({
+    const record = await sequelize.models.EGH.findOne({
       where: { id, recordStatus: "DELETED" },
     });
     res.status(200).json(record);
@@ -178,7 +169,8 @@ const deleteEdTemplate = async (req, res) => {
 };
 
 module.exports = {
-  createEdTemplate,
-  getEdTemplates,
-  updateEdTemplate,deleteEdTemplate
+  createHistoryFile,
+  getHistoryFiles,
+  updateFileHistory,
+  deleteFileHistory,
 };
